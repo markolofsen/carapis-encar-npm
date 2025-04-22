@@ -1,0 +1,60 @@
+{
+    "name": "encar",
+    "version": "0.1.6",
+    "description": "Encar is the official client for Carapis Encar API. Access real-time Korean used car data from Encar.com.",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/markolofsen/carapis-encar-npm.git"
+    },
+    "documentation": "https://carapis.com/docs",
+    "keywords": [
+        "encar",
+        "encar api",
+        "carapis",
+        "korean car api",
+        "used car api",
+        "vehicle data",
+        "car marketplace",
+        "car listing",
+        "client",
+        "automotive",
+        "nodejs",
+        "typescript",
+        "ts"
+    ],
+    "author": "Carapis.com <info@carapis.com> (https://carapis.com)",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/markolofsen/carapis-encar-npm/issues"
+    },
+    "homepage": "https://carapis.com/",
+    "files": [
+        "dist",
+        "src",
+        "LICENSE",
+        "README.md"
+    ],
+    "dependencies": {
+        "axios": "^1.6.0",
+        "js-yaml": "^4.1.0"
+    },
+    "devDependencies": {
+        "@types/js-yaml": "^4.0.0",
+        "@types/node": "^20.0.0",
+        "dotenv": "^16.3.1",
+        "rimraf": "^5.0.0",
+        "ts-node": "^10.9.0",
+        "typescript": "^5.0.0"
+    },
+    "scripts": {
+        "clean": "rimraf dist",
+        "build": "npm run clean && tsc",
+        "prepublishOnly": "npm run build",
+        "example": "clear && ts-node examples/run_encar.ts",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "deploy": "npm run build && npm publish",
+        "commit": "npx openrouter-commit -run"
+    }
+}
