@@ -8,7 +8,7 @@ import fs from 'fs';
 import yaml from 'js-yaml';
 import path from 'path';
 
-import { BASE_URL } from './config';
+import { getBaseUrl } from './config';
 
 const SCHEMA_PATH = path.join(__dirname, 'schema.yaml');
 const API_BASE_PATH = '/apix/encar/v2'; // Specific API path
@@ -53,7 +53,7 @@ export class CarapisClientError extends Error {
 
 
 export class CarapisClient {
-    private apiKey: string;
+    private apiKey?: string;
     private baseUrl: string;
     private apiBasePath: string;
     private axiosInstance: AxiosInstance;
@@ -66,13 +66,9 @@ export class CarapisClient {
      * TypeScript client for the Carapis Encar v2 API.
      * Loads API definitions from schema.yaml.
      */
-    constructor(apiKey: string) {
-        if (!apiKey) {
-            throw new Error("apiKey cannot be empty.");
-        }
-
+    constructor(apiKey?: string) {
         this.apiKey = apiKey;
-        this.baseUrl = BASE_URL.replace(/\/$/, ''); // Remove trailing slash
+        this.baseUrl = getBaseUrl();
         this.apiBasePath = API_BASE_PATH;
 
         try {
@@ -116,11 +112,14 @@ export class CarapisClient {
     }
 
     private _getHeaders(): Record<string, string> {
-        return {
+        const headers: Record<string, string> = {
             'Accept': 'application/json',
-            'Authorization': `ApiKey ${this.apiKey}`,
             'User-Agent': `encar/npm/${this._getPackageVersion()}`
         };
+        if (this.apiKey) {
+            headers['Authorization'] = `ApiKey ${this.apiKey}`;
+        }
+        return headers;
     }
 
     private _extractEndpoints(basePathPrefix: string): Record<string, EndpointInfo> {
@@ -251,21 +250,13 @@ export class CarapisClient {
             const isRequired = paramDef.required || false;
             knownParamNames.add(paramName);
 
-            let value = funcArgs[paramName];
-
-            // Handle special mapping for list_vehicles 'model_group' -> 'model__model_group'
-            if (operationId === 'encar_v2_vehicles_list' && paramName === 'model__model_group' && funcArgs.hasOwnProperty('model_group')) {
-                value = funcArgs.model_group; // Use the user-friendly 'model_group' arg
-            } else if (operationId === 'encar_v2_vehicles_list' && paramName === 'model_group') {
-                // Skip the original 'model_group' param from schema if we mapped 'model__model_group'
-                if (funcArgs.hasOwnProperty('model_group')) return;
-            }
+            // Get value directly using the parameter name defined in the schema
+            const value = funcArgs[paramName];
 
             if (value !== undefined && value !== null) {
                 if (paramIn === 'path') {
                     pathParams[paramName] = value;
                 } else if (paramIn === 'query') {
-                    // Use the schema parameter name (potentially model__model_group)
                     queryParams[paramName] = value;
                 }
             } else if (isRequired) {
@@ -274,11 +265,7 @@ export class CarapisClient {
         });
 
         // Warn about extra arguments
-        const extraArgs = Object.keys(funcArgs).filter(key =>
-            !knownParamNames.has(key) &&
-            // Allow 'model_group' for listVehicles as it maps to 'model__model_group'
-            !(operationId === 'encar_v2_vehicles_list' && key === 'model_group')
-        );
+        const extraArgs = Object.keys(funcArgs).filter(key => !knownParamNames.has(key));
         if (extraArgs.length > 0) {
             console.warn(`Warning: Unexpected arguments provided for '${operationId}': ${extraArgs.join(', ')}`);
         }

@@ -1,7 +1,7 @@
 {
     "name": "encar",
-    "version": "0.1.6",
-    "description": "Encar is the official client for Carapis Encar API. Access real-time Korean used car data from Encar.com.",
+    "version": "0.1.7",
+    "description": "Encar is the official TypeScript client parser for Carapis Encar API. Use this parser library to access, search, and analyze real-time Korean used car data from Encar.com via a powerful REST API. Supports vehicle listings, details, manufacturers, models, and more.",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "repository": {
@@ -20,6 +20,9 @@
         "car listing",
         "client",
         "automotive",
+        "parser",
+        "encar parser",
+        "data parser",
         "nodejs",
         "typescript",
         "ts"

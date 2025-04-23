@@ -1,348 +1,192 @@
-# Encar – Official TypeScript Client for Encar API
+# Encar – Official TypeScript Client Parser for Carapis Encar API
 
 [![NPM version](https://badge.fury.io/js/encar.svg)](https://www.npmjs.com/package/encar)
 [![API Docs](https://img.shields.io/badge/API%20Docs-Carapis%20Encar%20API-blue)](https://carapis.com/docs)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Carapis Catalog](https://img.shields.io/badge/Live%20Catalog-Carapis.com-green)](https://carapis.com/catalog)
 
-**Encar** is the official TypeScript client for the **Carapis Encar API**, providing seamless programmatic access to real-time Korean used car data from Encar.com. With the `encar` library, you can easily query, filter, and analyze vehicle listings, manufacturers, models, and more using TypeScript or JavaScript – all powered by the robust **Encar API** provided by Carapis.com.
+**Encar** is the official TypeScript client parser for the **Carapis Encar API**, providing seamless programmatic access to real-time Korean used car data from Encar.com. With the `encar` library parser, you can easily query, filter, and analyze vehicle listings, manufacturers, models, and more using TypeScript or JavaScript – all powered by the robust **Encar API** provided by Carapis.com.
 
-This client includes type definitions for better developer experience and safety.
+This client parser includes type definitions for better developer experience and safety.
 
-Explore a live catalog powered by this **Encar API**: [Carapis Catalog](https://carapis.com/catalog)
+Explore a live catalog powered by this **Carapis Encar API**: [Carapis Catalog](https://carapis.com/catalog)
 
 ## Features
 
-- Easy access to real-time Encar.com vehicle data via **Carapis Encar API**
-- Type-safe interaction with the **Encar API**
-- List, filter, and retrieve detailed car listings
-- Fetch manufacturer, model, and vehicle details programmatically
+- Easy access and parsing of real-time Encar.com vehicle data via the **Carapis Encar API** client parser.
+- Type-safe interaction with the **Encar API** using the parser
+- List, filter, and retrieve detailed car listings using the **Carapis Encar API** parser features.
+- Fetch manufacturer, model, and vehicle details programmatically (using slugs for catalog items)
 - Supports advanced search queries for the **Encar API** using `axios`
 - Free tier available for testing the **Encar API** (up to 1,000 vehicles)
-- Asynchronous operations using `async/await`
-
-## Installation
-
-Install the `encar` library using npm or yarn. Dependencies (`axios`, `js-yaml`) and necessary types (`@types/js-yaml`) are handled automatically.
-
-```bash
-npm install encar
-# or
-yarn add encar
-```
 
 ## Configuration
 
-1.  **API Key**: The client requires a **Carapis Encar API** key for full access. Get yours at [Carapis.com Pricing](https://carapis.com/pricing). Retrieve this key from a secure location, such as environment variables.
+1.  **API Key (Optional)**: For full access to the **Carapis Encar API**, an API key is recommended. Get yours at [Carapis.com Pricing](https://carapis.com/pricing).
 
-    *Without an API key, **Encar API** access is limited to the latest 1,000 vehicles (Free Tier).*
+    *If an API key is **not** provided, the client parser will operate in **Free Tier mode**, limited to accessing the latest 1,000 vehicles.*
+    *Retrieve your API key from a secure location, such as environment variables, if you use one.*
 
-## How to use Encar API (TypeScript Client)
+## How to use Encar API (TypeScript Client Parser)
 
-Initialize the client and make **Encar API** calls using `async/await`.
+Initialize the client parser and make **Encar API** calls using `async/await`.
 
 ```typescript
 import { CarapisClient, CarapisClientError } from 'encar';
 
-// Assume API_KEY is available in the environment or defined elsewhere
-const API_KEY = process.env.CARAPIS_API_KEY || 'YOUR_API_KEY_HERE'; // Example: Replace or set environment variable
+// --- Option 1: Initialize with API Key (Recommended for full access) ---
+const API_KEY = process.env.CARAPIS_API_KEY; // Or get from a secure source
+const clientWithKey = new CarapisClient(API_KEY);
 
-// Check if API_KEY is set - crucial for authenticated access
-if (!API_KEY || API_KEY === 'YOUR_API_KEY_HERE') {
-    console.warn("Warning: CARAPIS_API_KEY is not set. Using limited free tier access.");
-    // Consider exiting or handling this case if full access is mandatory
-    // process.exit(1);
-}
+// --- Option 2: Initialize without API Key (Free Tier - Limited Access) ---
+const clientFreeTier = new CarapisClient(); // No API key provided
 
-// Main async function to run examples
-async function runEncarApiExamples() {
-    let client: CarapisClient;
+// --- Proceed with Encar API calls using either client parser ---
 
-    try {
-        // Initialize Encar API client
-        // Pass the API key (or undefined/null for free tier)
-        client = new CarapisClient(API_KEY);
-        console.log("Carapis Encar API Client (TS) initialized successfully.");
-
-        // --- Proceed with Encar API calls below ---
-
-        // Example: List vehicles
-        console.log("\n--- Querying Encar API for Vehicles ---");
-        const vehicles = await client.listVehicles({ limit: 3, min_year: 2022 });
-        console.log("Vehicles Found via Encar API:", vehicles.results ? `${vehicles.results.length} results` : 'No results');
-        // Add more calls here...
-
-    } catch (error) {
-        if (error instanceof CarapisClientError) {
-            console.error(`Encar API Client Error (${error.status || 'N/A'}): ${error.message}`,
-                          error.details ? `\nDetails: ${JSON.stringify(error.details)}` : '');
-        } else {
-            console.error("An unexpected error occurred:", error);
-        }
-    }
-}
-
-// Run the examples
-runEncarApiExamples();
+// Example API call using the free tier client (needs to be in an async context):
+// async function runFreeTier() {
+//    const vehicles = await clientFreeTier.listVehicles({ limit: 3 });
+//    // Process vehicles.results (limited to latest 1000)
+// }
+// runFreeTier();
 ```
 
 ---
 
-## Encar API TypeScript Usage Examples
+## Encar API TypeScript Usage Examples (Parser)
 
-Below are examples for querying the **Encar API** using this TypeScript client.
+Below are examples for querying the **Encar API** using this TypeScript client parser.
 
-*(Note: All client methods are `async` and return Promises. Use `await` inside an `async` function or `.then()` chaining.)*
+*(Note: All client parser methods are `async` and return Promises. Use `await` inside an `async` function or `.then()` chaining.)*
 
-### List Vehicles via Encar API
+### List Vehicles via Encar API Parser
 
-Retrieve a list of vehicles with filtering.
+Retrieve a list of vehicles with filtering. Uses slugs for manufacturer/model group/model.
 
 ```typescript
-async function listSomeVehicles(client: CarapisClient) {
-    try {
-        console.log("\n--- Querying Encar API for Vehicles ---");
-        // Fetch vehicle data via Encar API
-        const response = await client.listVehicles({
-            limit: 5,
-            min_year: 2021,
-            fuel_type: 'gasoline',
-            max_mileage: 50000,
-            ordering: '-created_at'
-        });
-        console.log("Vehicles Found via Encar API:");
-        if (response && response.results) {
-            // Assuming results is an array of vehicles
-            (response.results as any[]).forEach(v => {
-                 console.log(`- ID: ${v.vehicle_id}, Model: ${v.model_name || 'N/A'}, Price: ${v.price}`);
-            });
-        } else {
-            console.log("No vehicles found.");
-        }
-    } catch (e) {
-        if (e instanceof CarapisClientError) console.error("Encar API Error:", e.message, e.details);
-        else console.error("Error listing vehicles:", e);
-    }
-}
 // Assuming 'client' is an initialized CarapisClient instance
-// listSomeVehicles(client);
+const vehiclesResponse = await client.listVehicles({
+    limit: 5,
+    min_year: 2021,
+    fuel_type: 'gasoline',
+    manufacturer_slug: 'hyundai', // Filter by manufacturer slug
+    model_group_slug: 'sonata',   // Filter by model group slug
+    max_mileage: 50000,
+    ordering: '-created_at'
+});
+// Process vehiclesResponse.results (array of vehicles)
+// vehiclesResponse also contains count, page, pages, limit
 ```
 
-### Get Vehicle Details via Encar API
+### Get Vehicle Details via Encar API Parser
 
-Retrieve details for a specific vehicle.
+Retrieve details for a specific vehicle by its `vehicle_id`.
 
 ```typescript
-async function getVehicle(client: CarapisClient, vehicleId: number) {
-    try {
-        console.log("\n--- Getting Vehicle Details from Encar API (ID: ${vehicleId}) ---");
-        // Fetch specific vehicle details via Encar API
-        // The actual method might be getVehicle or getVehicles depending on generation
-        const vehicleDetails = await client.getVehicles({ vehicle_id: vehicleId });
-        console.log("Vehicle Details Received from Encar API:");
-        console.log(JSON.stringify(vehicleDetails, null, 2));
-    } catch (e) {
-         if (e instanceof CarapisClientError) console.error("Encar API Error:", e.message, e.details);
-         else console.error(`Error getting vehicle ${vehicleId}:`, e);
-    }
-}
-// getVehicle(client, 12345678); // Replace with a valid ID
+// Assuming 'client' is an initialized CarapisClient instance
+const vehicleId = 38481829; // Replace with a valid ID
+const vehicleDetails = await client.getVehicles({ vehicle_id: vehicleId });
+// Process vehicleDetails (object with vehicle data)
 ```
 
-### List Manufacturers via Encar API
+### List Manufacturers via Encar API Parser
 
 Retrieve a list of vehicle manufacturers.
 
 ```typescript
-async function listManufacturers(client: CarapisClient) {
-    try {
-        console.log("\n--- Listing Manufacturers from Encar API ---");
-        // Fetch manufacturers via Encar API
-        const response = await client.listCatalogManufacturers({ country: 'KR', limit: 10 });
-        console.log("Manufacturers Found via Encar API:");
-        if (response && response.results) {
-            (response.results as any[]).forEach(mfr => {
-                 console.log(`- Code: ${mfr.code}, Name: ${mfr.name}`);
-            });
-        } else {
-            console.log("No manufacturers found.");
-        }
-    } catch (e) {
-        if (e instanceof CarapisClientError) console.error("Encar API Error:", e.message, e.details);
-        else console.error("Error listing manufacturers:", e);
-    }
-}
-// listManufacturers(client);
+// Assuming 'client' is an initialized CarapisClient instance
+const manufacturersResponse = await client.listCatalogManufacturers({ country: 'KR', limit: 10 });
+// Process manufacturersResponse.results (array of manufacturers)
+// manufacturersResponse also contains count, page, pages, limit
 ```
 
-### Get Manufacturer Details via Encar API
+### Get Manufacturer Details via Encar API Parser
 
-Retrieve details for a specific manufacturer by its code.
+Retrieve details for a specific manufacturer by its `slug`.
 
 ```typescript
-async function getManufacturer(client: CarapisClient, manufacturerCode: string) {
-    try {
-        console.log("\n--- Getting Manufacturer Details from Encar API (Code: ${manufacturerCode}) ---");
-        const manufacturerInfo = await client.getCatalogManufacturers({ code: manufacturerCode });
-        console.log("Manufacturer Details Received from Encar API:");
-        console.log(JSON.stringify(manufacturerInfo, null, 2));
-    } catch (e) {
-        if (e instanceof CarapisClientError) console.error("Encar API Error:", e.message, e.details);
-        else console.error(`Error getting manufacturer ${manufacturerCode}:`, e);
-    }
-}
-// getManufacturer(client, '101'); // Example: Hyundai
+// Assuming 'client' is an initialized CarapisClient instance
+const manufacturerSlug = 'hyundai'; // Example slug
+const manufacturerInfo = await client.getCatalogManufacturers({ slug: manufacturerSlug });
+// Process manufacturerInfo (object with manufacturer data)
 ```
 
-### Get Manufacturer Stats via Encar API
+### Get Manufacturer Stats via Encar API Parser
 
 Retrieve overall statistics about manufacturers.
 
 ```typescript
-async function getManufacturerStats(client: CarapisClient) {
-    try {
-        console.log("\n--- Getting Manufacturer Stats from Encar API ---");
-        const mfrStats = await client.getCatalogManufacturersStats({}); // No args needed
-        console.log("Manufacturer Statistics Received from Encar API:");
-        console.log(JSON.stringify(mfrStats, null, 2));
-    } catch (e) {
-        if (e instanceof CarapisClientError) console.error("Encar API Error:", e.message, e.details);
-        else console.error("Error getting manufacturer stats:", e);
-    }
-}
-// getManufacturerStats(client);
+// Assuming 'client' is an initialized CarapisClient instance
+const mfrStats = await client.getCatalogManufacturersStats({});
+// Process mfrStats (object with statistics)
 ```
 
-### List Model Groups via Encar API
+### List Model Groups via Encar API Parser
 
-Retrieve a list of model groups, optionally filtered.
+Retrieve a list of model groups, filtered by manufacturer's `slug`.
 
 ```typescript
-async function listModelGroups(client: CarapisClient, manufacturerCode: string) {
-    try {
-        console.log("\n--- Listing Model Groups from Encar API (Manufacturer: ${manufacturerCode}) ---");
-        const response = await client.listCatalogModelGroups({ manufacturer: manufacturerCode, search: 'Avante', limit: 5 });
-        console.log("Model Groups Found via Encar API:");
-        if (response && response.results) {
-            (response.results as any[]).forEach(mg => {
-                 console.log(`- Code: ${mg.code}, Name: ${mg.name}`);
-            });
-        } else {
-            console.log("No model groups found.");
-        }
-    } catch (e) {
-        if (e instanceof CarapisClientError) console.error("Encar API Error:", e.message, e.details);
-        else console.error("Error listing model groups:", e);
-    }
-}
-// listModelGroups(client, '101'); // Example: Hyundai
+// Assuming 'client' is an initialized CarapisClient instance
+const manufacturerSlugForGroups = 'hyundai'; // Example slug
+const modelGroupsResponse = await client.listCatalogModelGroups({ manufacturer__slug: manufacturerSlugForGroups, search: 'Sonata', limit: 5 });
+// Process modelGroupsResponse.results (array of model groups)
+// modelGroupsResponse also contains count, page, pages, limit
 ```
 
-### Get Model Group Details via Encar API
+### Get Model Group Details via Encar API Parser
 
-Retrieve details for a specific model group by its code.
+Retrieve details for a specific model group by its `slug`.
 
 ```typescript
-async function getModelGroup(client: CarapisClient, modelGroupCode: string) {
-    try {
-        console.log("\n--- Getting Model Group Details from Encar API (Code: ${modelGroupCode}) ---");
-        const modelGroupInfo = await client.getCatalogModelGroups({ code: modelGroupCode });
-        console.log("Model Group Details Received from Encar API:");
-        console.log(JSON.stringify(modelGroupInfo, null, 2));
-    } catch (e) {
-        if (e instanceof CarapisClientError) console.error("Encar API Error:", e.message, e.details);
-        else console.error(`Error getting model group ${modelGroupCode}:`, e);
-    }
-}
-// getModelGroup(client, '1101'); // Example: Avante
+// Assuming 'client' is an initialized CarapisClient instance
+const modelGroupSlug = 'sonata'; // Example slug
+const modelGroupInfo = await client.getCatalogModelGroups({ slug: modelGroupSlug });
+// Process modelGroupInfo (object with model group data)
 ```
 
-### List Models via Encar API
+### List Models via Encar API Parser
 
-Retrieve a list of specific vehicle models, optionally filtered.
+Retrieve a list of specific vehicle models, filtered by model group's `slug`.
 
 ```typescript
-async function listModels(client: CarapisClient, modelGroupCode: string) {
-    try {
-        console.log("\n--- Listing Models from Encar API (Model Group: ${modelGroupCode}) ---");
-        const response = await client.listCatalogModels({ model_group: modelGroupCode, search: 'CN7', limit: 5 });
-        console.log("Models Found via Encar API:");
-        if (response && response.results) {
-            (response.results as any[]).forEach(mdl => {
-                 console.log(`- Code: ${mdl.code}, Name: ${mdl.name}`);
-            });
-        } else {
-            console.log("No models found.");
-        }
-    } catch (e) {
-        if (e instanceof CarapisClientError) console.error("Encar API Error:", e.message, e.details);
-        else console.error("Error listing models:", e);
-    }
-}
-// listModels(client, '1101'); // Example: Avante
+// Assuming 'client' is an initialized CarapisClient instance
+const modelGroupSlugForModels = 'sonata'; // Example slug
+const modelsResponse = await client.listCatalogModels({ model_group__slug: modelGroupSlugForModels, search: 'DN8', limit: 5 });
+// Process modelsResponse.results (array of models)
+// modelsResponse also contains count, page, pages, limit
 ```
 
-### Get Model Details via Encar API
+### Get Model Details via Encar API Parser
 
-Retrieve details for a specific vehicle model by its code.
+Retrieve details for a specific vehicle model by its `slug`.
 
 ```typescript
-async function getModel(client: CarapisClient, modelCode: string) {
-    try {
-        console.log("\n--- Getting Model Details from Encar API (Code: ${modelCode}) ---");
-        const modelInfo = await client.getCatalogModels({ code: modelCode });
-        console.log("Model Details Received from Encar API:");
-        console.log(JSON.stringify(modelInfo, null, 2));
-    } catch (e) {
-        if (e instanceof CarapisClientError) console.error("Encar API Error:", e.message, e.details);
-        else console.error(`Error getting model ${modelCode}:`, e);
-    }
-}
-// getModel(client, '21101'); // Example: Specific Avante model
+// Assuming 'client' is an initialized CarapisClient instance
+const modelSlug = 'sonata-dn8'; // Example slug
+const modelInfo = await client.getCatalogModels({ slug: modelSlug });
+// Process modelInfo (object with model data)
 ```
 
-### List Dealers via Encar API
+### List Dealers via Encar API Parser
 
 Retrieve a list of dealers.
 
 ```typescript
-async function listDealers(client: CarapisClient) {
-    try {
-        console.log("\n--- Listing Dealers from Encar API ---");
-        const response = await client.listBusinessDealers({ limit: 5, ordering: 'name' });
-        console.log("Dealers Found via Encar API:");
-        if (response && response.results) {
-            (response.results as any[]).forEach(dealer => {
-                 console.log(`- ID: ${dealer.user_id}, Name: ${dealer.name}`);
-            });
-        } else {
-            console.log("No dealers found.");
-        }
-    } catch (e) {
-        if (e instanceof CarapisClientError) console.error("Encar API Error:", e.message, e.details);
-        else console.error("Error listing dealers:", e);
-    }
-}
-// listDealers(client);
+// Assuming 'client' is an initialized CarapisClient instance
+const dealersResponse = await client.listBusinessDealers({ limit: 5, ordering: 'name' });
+// Process dealersResponse.results (array of dealers)
+// dealersResponse also contains count, page, pages, limit
 ```
 
 ### Get Dealer Details via Encar API
 
-Retrieve details for a specific dealer by their user ID.
+Retrieve details for a specific dealer by their `user_id`.
 
 ```typescript
-async function getDealer(client: CarapisClient, userId: string) {
-    try {
-        console.log("\n--- Getting Dealer Details from Encar API (ID: ${userId}) ---");
-        const dealerInfo = await client.getBusinessDealers({ user_id: userId });
-        console.log("Dealer Details Received from Encar API:");
-        console.log(JSON.stringify(dealerInfo, null, 2));
-    } catch (e) {
-        if (e instanceof CarapisClientError) console.error("Encar API Error:", e.message, e.details);
-        else console.error(`Error getting dealer ${userId}:`, e);
-    }
-}
-// getDealer(client, 'some_dealer_id'); // Replace with a valid dealer ID
+// Assuming 'client' is an initialized CarapisClient instance
+const dealerUserId = 'A0123j'; // Replace with a valid dealer ID
+const dealerInfo = await client.getBusinessDealers({ user_id: dealerUserId });
+// Process dealerInfo (object with dealer data)
 ```
 
 ### List Diagnosis Centers via Encar API
@@ -350,43 +194,21 @@ async function getDealer(client: CarapisClient, userId: string) {
 Retrieve a list of diagnosis centers.
 
 ```typescript
-async function listDiagnosisCenters(client: CarapisClient) {
-    try {
-        console.log("\n--- Listing Diagnosis Centers from Encar API ---");
-        const response = await client.listBusinessDiagnosisCenters({ limit: 5 });
-        console.log("Diagnosis Centers Found via Encar API:");
-        if (response && response.results) {
-            (response.results as any[]).forEach(center => {
-                 console.log(`- Code: ${center.code}, Name: ${center.name}`);
-            });
-        } else {
-            console.log("No diagnosis centers found.");
-        }
-    } catch (e) {
-        if (e instanceof CarapisClientError) console.error("Encar API Error:", e.message, e.details);
-        else console.error("Error listing diagnosis centers:", e);
-    }
-}
-// listDiagnosisCenters(client);
+// Assuming 'client' is an initialized CarapisClient instance
+const centersResponse = await client.listBusinessDiagnosisCenters({ limit: 5 });
+// Process centersResponse.results (array of centers)
+// centersResponse also contains count, page, pages, limit
 ```
 
 ### Get Diagnosis Center Details via Encar API
 
-Retrieve details for a specific diagnosis center by its code.
+Retrieve details for a specific diagnosis center by its `code`.
 
 ```typescript
-async function getDiagnosisCenter(client: CarapisClient, centerCode: string) {
-    try {
-        console.log("\n--- Getting Diagnosis Center Details from Encar API (Code: ${centerCode}) ---");
-        const centerInfo = await client.getBusinessDiagnosisCenters({ code: centerCode });
-        console.log("Diagnosis Center Details Received from Encar API:");
-        console.log(JSON.stringify(centerInfo, null, 2));
-    } catch (e) {
-        if (e instanceof CarapisClientError) console.error("Encar API Error:", e.message, e.details);
-        else console.error(`Error getting diagnosis center ${centerCode}:`, e);
-    }
-}
-// getDiagnosisCenter(client, '123'); // Replace with a valid center code
+// Assuming 'client' is an initialized CarapisClient instance
+const centerCode = 'dA17201'; // Replace with a valid center code
+const centerInfo = await client.getBusinessDiagnosisCenters({ code: centerCode });
+// Process centerInfo (object with center data)
 ```
 
 ### Get Vehicle Enums via Encar API
@@ -394,18 +216,9 @@ async function getDiagnosisCenter(client: CarapisClient, centerCode: string) {
 Retrieve available enumeration values (like body types, colors, etc.).
 
 ```typescript
-async function getVehicleEnums(client: CarapisClient) {
-    try {
-        console.log("\n--- Getting Vehicle Enums from Encar API ---");
-        const enums = await client.getVehiclesEnums({}); // No args needed
-        console.log("Vehicle Enums Received from Encar API:");
-        console.log(JSON.stringify(enums, null, 2));
-    } catch (e) {
-        if (e instanceof CarapisClientError) console.error("Encar API Error:", e.message, e.details);
-        else console.error("Error getting vehicle enums:", e);
-    }
-}
-// getVehicleEnums(client);
+// Assuming 'client' is an initialized CarapisClient instance
+const vehicleEnums = await client.getVehiclesEnums({});
+// Process vehicleEnums (object containing arrays of enum values, e.g., vehicleEnums.fuel_types)
 ```
 
 ### Get Vehicle Stats via Encar API
@@ -413,58 +226,49 @@ async function getVehicleEnums(client: CarapisClient) {
 Retrieve overall statistics about the vehicle listings.
 
 ```typescript
-async function getVehicleStats(client: CarapisClient) {
-    try {
-        console.log("\n--- Getting Vehicle Stats from Encar API ---");
-        const stats = await client.getVehiclesStats({}); // No args needed
-        console.log("Vehicle Statistics Received from Encar API:");
-        console.log(JSON.stringify(stats, null, 2));
-    } catch (e) {
-        if (e instanceof CarapisClientError) console.error("Encar API Error:", e.message, e.details);
-        else console.error("Error getting vehicle stats:", e);
-    }
-}
-// getVehicleStats(client);
+// Assuming 'client' is an initialized CarapisClient instance
+const vehicleStats = await client.getVehiclesStats({});
+// Process vehicleStats (object with statistics)
 ```
 
 ---
 
-## Direct Encar API Access & Documentation
+## Direct Carapis Encar API Access & Documentation
 
-Interact with the **Encar API** directly using `curl` or other HTTP clients.
+Interact with the **Carapis Encar API** directly using `curl` or other HTTP clients. This API acts as a powerful data source, parsed effectively by the TypeScript client parser.
 
-**Full Encar API Documentation:** [https://carapis.com/docs](https://carapis.com/docs)
+**Full Carapis Encar API Documentation:** [https://carapis.com/docs](https://carapis.com/docs)
 
-**Example `curl` Requests for Encar API:**
+**Example `curl` Requests for Carapis Encar API:**
 
-*   **With API Key (Full Encar API Access):**
+*   **With API Key (Full Carapis Encar API Access):**
     ```bash
-    # Query Encar API for vehicles
+    # Query Carapis Encar API for vehicles
     curl -X 'GET' \
-      'https://carapis.com/apix/encar/v2/vehicles/?limit=5&min_year=2021' \
+      'https://carapis.com/apix/encar/v2/vehicles/?limit=5&min_year=2021&manufacturer_slug=hyundai' \
       -H 'accept: application/json' \
       -H 'Authorization: ApiKey YOUR_API_KEY_UUID'
     ```
 
-*   **Without API Key (Free Tier Encar API Access - 1,000 Record Limit):**
+*   **Without API Key (Free Tier Carapis Encar API Access - 1,000 Record Limit):**
     ```bash
-    # Limited query to Encar API
+    # Limited query to Carapis Encar API
     curl -X 'GET' \
       'https://carapis.com/apix/encar/v2/vehicles/?limit=5' \
       -H 'accept: application/json'
     ```
 
-See [Carapis Pricing Plans](https://carapis.com/pricing) for **Encar API** access tiers.
+See [Carapis Pricing Plans](https://carapis.com/pricing) for **Carapis Encar API** access tiers.
 
 ## See Also
 
-- [Carapis.com](https://carapis.com) - The provider of this Encar API.
-- [Encar.com](https://encar.com) - The primary source of the vehicle data.
+*   [Carapis.com](https://carapis.com) - The provider of this Carapis Encar API.
+*   [Encar.com](https://encar.com) - The primary source of the vehicle data.
 
 ## Support & Contact
 
-- Website: [https://carapis.com](https://carapis.com)
-- Telegram: [t.me/markinmatrix](https://t.me/markinmatrix)
+*   Website: [https://carapis.com](https://carapis.com)
+*   Telegram: [t.me/markinmatrix](https://t.me/markinmatrix)
 
 ## License
 

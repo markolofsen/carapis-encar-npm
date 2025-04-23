@@ -2,14 +2,29 @@ import dotenv from 'dotenv';
 import fs from 'fs'; // Import fs for file system operations
 import path from 'path';
 
+// --- END Environment Loading ---
+// NOW import the client, which will use the loaded env vars (or defaults)
 import { CarapisClient, CarapisClientError } from '../src/index'; // Use local src for example
 
-// --- Setup Paths and Environment ---
+// --- Setup Paths and Load Environment FIRST ---
+// Ensure environment variables are loaded before any other imports that might need them.
 const SCRIPT_DIR = __dirname;
-const DOWNLOADS_DIR = path.join(SCRIPT_DIR, 'downloads');
 const PROJECT_ROOT = path.join(SCRIPT_DIR, '..', '..'); // Adjust if necessary
-dotenv.config({ path: path.join(PROJECT_ROOT, '.env') });
+const ENV_PATH = path.join(PROJECT_ROOT, '.env');
 
+const envLoadResult = dotenv.config({ path: ENV_PATH, override: true });
+
+if (envLoadResult.error) {
+    console.warn(`Warning: Could not load .env file from ${ENV_PATH}: ${envLoadResult.error.message}`);
+} else if (envLoadResult.parsed) {
+    console.log(`.env file loaded successfully from ${ENV_PATH}`);
+    // Optional: Log specific vars after loading
+    console.log(`CARAPIS_API_KEY loaded: ${process.env.CARAPIS_API_KEY ? 'Yes' : 'No'}`);
+    console.log(`ENCAR_API_URL loaded: ${process.env.ENCAR_API_URL || 'Not Set (using default)'}`);
+} else {
+    console.log(`.env file not found at ${ENV_PATH} or is empty.`);
+}
+const DOWNLOADS_DIR = path.join(SCRIPT_DIR, 'downloads');
 const API_KEY = process.env.CARAPIS_API_KEY;
 
 // Type for args, adjust as needed or import from a types file
@@ -78,9 +93,9 @@ async function main() {
 
     let firstDealerId: string | null = null;
     let firstCenterCode: string | null = null;
-    let firstMfrCode: string | null = null;
-    let firstModelGroupCode: string | null = null;
-    let firstModelCode: string | null = null;
+    let firstMfrSlug: string | null = null;
+    let firstModelGroupSlug: string | null = null;
+    let firstModelSlug: string | null = null;
     let firstVehicleId: number | null = null;
     let result: any; // Variable to hold results
 
@@ -151,7 +166,7 @@ async function main() {
     }
 
 
-    // --- Catalog Endpoints ---
+    // --- Catalog Endpoints --- Refactored to use slugs
     console.log("\n*** Running Catalog Endpoints ***");
     try {
         const args = { limit: 2, country: 'KR' as const };
@@ -160,10 +175,11 @@ async function main() {
         console.log(`SUCCESS: listCatalogManufacturers -> Got ${result?.results?.length ?? 0} results.`);
         saveResult('listCatalogManufacturers', args, result);
         if (result?.results?.length > 0) {
-            firstMfrCode = result.results[0]?.code;
-            if (firstMfrCode) console.log(` --> Fetched manufacturer code: ${firstMfrCode}`);
+            firstMfrSlug = result.results[0]?.slug;
+            if (firstMfrSlug) console.log(` --> Fetched manufacturer slug: ${firstMfrSlug}`);
+            else console.log(` --> First manufacturer has no slug: ${JSON.stringify(result.results[0])}`);
         } else {
-            console.log(" --> Could not get manufacturer code from list.");
+            console.log(" --> Could not get manufacturer data from list.");
         }
     } catch (error: any) {
         console.error(`FAILED: listCatalogManufacturers`);
@@ -171,9 +187,9 @@ async function main() {
         else console.error(`  -> Unexpected Error: ${error.message}`);
     }
 
-    if (firstMfrCode) {
+    if (firstMfrSlug) {
         try {
-            const args = { code: firstMfrCode };
+            const args = { slug: firstMfrSlug };
             console.log(`\n--- Calling: getCatalogManufacturers with args: ${JSON.stringify(args)} ---`);
             result = await client.getCatalogManufacturers(args);
             console.log(`SUCCESS: getCatalogManufacturers -> Result keys: ${Object.keys(result).join(', ')}`);
@@ -183,32 +199,19 @@ async function main() {
             if (error instanceof CarapisClientError) console.error(`  -> API Error (${error.status || 'N/A'}): ${error.message}`, error.details ? `\nDetails: ${JSON.stringify(error.details)}` : '');
             else console.error(`  -> Unexpected Error: ${error.message}`);
         }
-    }
 
-    try {
-        const args = {}; // No args for stats
-        console.log(`\n--- Calling: getCatalogManufacturersStats ---`);
-        result = await client.getCatalogManufacturersStats(args);
-        console.log(`SUCCESS: getCatalogManufacturersStats -> Result keys: ${Object.keys(result).join(', ')}`);
-        saveResult('getCatalogManufacturersStats', args, result);
-    } catch (error: any) {
-        console.error(`FAILED: getCatalogManufacturersStats`);
-        if (error instanceof CarapisClientError) console.error(`  -> API Error (${error.status || 'N/A'}): ${error.message}`, error.details ? `\nDetails: ${JSON.stringify(error.details, null, 2)}` : ''); // Nicer formatting for details
-        else console.error(`  -> Unexpected Error: ${error.message}`);
-    }
-
-    if (firstMfrCode) {
         try {
-            const args = { manufacturer: firstMfrCode, limit: 2, search: 'Avante' };
+            const args = { manufacturer__slug: firstMfrSlug, limit: 2, search: 'Sonata' };
             console.log(`\n--- Calling: listCatalogModelGroups with args: ${JSON.stringify(args)} ---`);
             result = await client.listCatalogModelGroups(args);
             console.log(`SUCCESS: listCatalogModelGroups -> Got ${result?.results?.length ?? 0} results.`);
             saveResult('listCatalogModelGroups', args, result);
             if (result?.results?.length > 0) {
-                firstModelGroupCode = result.results[0]?.code;
-                if (firstModelGroupCode) console.log(` --> Fetched model group code: ${firstModelGroupCode}`);
+                firstModelGroupSlug = result.results[0]?.slug;
+                if (firstModelGroupSlug) console.log(` --> Fetched model group slug: ${firstModelGroupSlug}`);
+                else console.log(` --> First model group has no slug: ${JSON.stringify(result.results[0])}`);
             } else {
-                console.log(" --> Could not get model group code from list.");
+                console.log(" --> Could not get model group data from list.");
             }
         } catch (error: any) {
             console.error(`FAILED: listCatalogModelGroups`);
@@ -216,12 +219,12 @@ async function main() {
             else console.error(`  -> Unexpected Error: ${error.message}`);
         }
     } else {
-        console.log("Skipping model group calls as manufacturer code was not fetched.");
+        console.log("Skipping model group calls as manufacturer slug was not fetched.");
     }
 
-    if (firstModelGroupCode) {
+    if (firstModelGroupSlug) {
         try {
-            const args = { code: firstModelGroupCode };
+            const args = { slug: firstModelGroupSlug };
             console.log(`\n--- Calling: getCatalogModelGroups with args: ${JSON.stringify(args)} ---`);
             result = await client.getCatalogModelGroups(args);
             console.log(`SUCCESS: getCatalogModelGroups -> Result keys: ${Object.keys(result).join(', ')}`);
@@ -233,16 +236,17 @@ async function main() {
         }
 
         try {
-            const args = { model_group: firstModelGroupCode, limit: 2, search: 'CN7' };
+            const args = { model_group__slug: firstModelGroupSlug, limit: 2, search: 'DN8' };
             console.log(`\n--- Calling: listCatalogModels with args: ${JSON.stringify(args)} ---`);
             result = await client.listCatalogModels(args);
             console.log(`SUCCESS: listCatalogModels -> Got ${result?.results?.length ?? 0} results.`);
             saveResult('listCatalogModels', args, result);
             if (result?.results?.length > 0) {
-                firstModelCode = result.results[0]?.code;
-                if (firstModelCode) console.log(` --> Fetched model code: ${firstModelCode}`);
+                firstModelSlug = result.results[0]?.slug;
+                if (firstModelSlug) console.log(` --> Fetched model slug: ${firstModelSlug}`);
+                else console.log(` --> First model has no slug: ${JSON.stringify(result.results[0])}`);
             } else {
-                console.log(" --> Could not get model code from list.");
+                console.log(" --> Could not get model data from list.");
             }
         } catch (error: any) {
             console.error(`FAILED: listCatalogModels`);
@@ -250,12 +254,12 @@ async function main() {
             else console.error(`  -> Unexpected Error: ${error.message}`);
         }
     } else {
-        console.log("Skipping model list/get calls as model group code was not fetched.");
+        console.log("Skipping model list/get calls as model group slug was not fetched.");
     }
 
-    if (firstModelCode) {
+    if (firstModelSlug) {
         try {
-            const args = { code: firstModelCode };
+            const args = { slug: firstModelSlug };
             console.log(`\n--- Calling: getCatalogModels with args: ${JSON.stringify(args)} ---`);
             result = await client.getCatalogModels(args);
             console.log(`SUCCESS: getCatalogModels -> Result keys: ${Object.keys(result).join(', ')}`);
@@ -265,17 +269,32 @@ async function main() {
             if (error instanceof CarapisClientError) console.error(`  -> API Error (${error.status || 'N/A'}): ${error.message}`, error.details ? `\nDetails: ${JSON.stringify(error.details)}` : '');
             else console.error(`  -> Unexpected Error: ${error.message}`);
         }
+    } else {
+        console.log("Skipping get model call as model slug was not fetched.");
+    }
+
+    // Manufacturer Stats (unconditional)
+    try {
+        const args = {}; // No args for stats
+        console.log(`\n--- Calling: getCatalogManufacturersStats ---`);
+        result = await client.getCatalogManufacturersStats(args);
+        console.log(`SUCCESS: getCatalogManufacturersStats -> Result keys: ${Object.keys(result).join(', ')}`);
+        saveResult('getCatalogManufacturersStats', args, result);
+    } catch (error: any) {
+        console.error(`FAILED: getCatalogManufacturersStats`);
+        if (error instanceof CarapisClientError) console.error(`  -> API Error (${error.status || 'N/A'}): ${error.message}`, error.details ? `\nDetails: ${JSON.stringify(error.details, null, 2)}` : '');
+        else console.error(`  -> Unexpected Error: ${error.message}`);
     }
 
 
-    // --- Vehicle Endpoints ---
+    // --- Vehicle Endpoints --- Refactored to use slugs
     console.log("\n*** Running Vehicle Endpoints ***");
     try {
         const args = { limit: 1, ordering: '-created_at' as const };
         console.log(`\n--- Calling: listVehicles with args: ${JSON.stringify(args)} ---`);
         result = await client.listVehicles(args);
         console.log(`SUCCESS: listVehicles -> Got ${result?.results?.length ?? 0} results.`);
-        saveResult('listVehicles', args, result);
+        saveResult('listVehicles_first', args, result);
         if (result?.results?.length > 0) {
             firstVehicleId = result.results[0]?.vehicle_id;
             if (firstVehicleId) console.log(` --> Fetched vehicle ID: ${firstVehicleId}`);
@@ -283,7 +302,7 @@ async function main() {
             console.log(" --> Could not get vehicle ID from list.");
         }
     } catch (error: any) {
-        console.error(`FAILED: listVehicles`);
+        console.error(`FAILED: listVehicles (get first ID)`);
         if (error instanceof CarapisClientError) console.error(`  -> API Error (${error.status || 'N/A'}): ${error.message}`, error.details ? `\nDetails: ${JSON.stringify(error.details)}` : '');
         else console.error(`  -> Unexpected Error: ${error.message}`);
     }
@@ -302,20 +321,48 @@ async function main() {
         }
     }
 
-    // Additional list example
+    // Additional list examples using slugs
+    if (firstMfrSlug) {
+        try {
+            const args = { limit: 2, manufacturer_slug: firstMfrSlug };
+            console.log(`\n--- Calling: listVehicles by manufacturer slug: ${JSON.stringify(args)} ---`);
+            result = await client.listVehicles(args);
+            console.log(`SUCCESS: listVehicles -> Got ${result?.results?.length ?? 0} results.`);
+            saveResult('listVehicles_by_mfr_slug', args, result);
+        } catch (error: any) {
+            console.error(`FAILED: listVehicles (by mfr slug)`);
+            if (error instanceof CarapisClientError) console.error(`  -> API Error (${error.status || 'N/A'}): ${error.message}`, error.details ? `\nDetails: ${JSON.stringify(error.details)}` : '');
+            else console.error(`  -> Unexpected Error: ${error.message}`);
+        }
+    }
+
+    if (firstMfrSlug && firstModelGroupSlug) {
+        try {
+            const args = { limit: 2, manufacturer_slug: firstMfrSlug, model_group_slug: firstModelGroupSlug };
+            console.log(`\n--- Calling: listVehicles by mfr/model_group slug: ${JSON.stringify(args)} ---`);
+            result = await client.listVehicles(args);
+            console.log(`SUCCESS: listVehicles -> Got ${result?.results?.length ?? 0} results.`);
+            saveResult('listVehicles_by_mfr_mg_slug', args, result);
+        } catch (error: any) {
+            console.error(`FAILED: listVehicles (by mfr/mg slug)`);
+            if (error instanceof CarapisClientError) console.error(`  -> API Error (${error.status || 'N/A'}): ${error.message}`, error.details ? `\nDetails: ${JSON.stringify(error.details)}` : '');
+            else console.error(`  -> Unexpected Error: ${error.message}`);
+        }
+    }
+
     try {
         const args = { limit: 2, min_year: 2022, fuel_type: 'gasoline' as const };
         console.log(`\n--- Calling: listVehicles with args: ${JSON.stringify(args)} ---`);
         result = await client.listVehicles(args);
         console.log(`SUCCESS: listVehicles -> Got ${result?.results?.length ?? 0} results.`);
-        saveResult('listVehicles', args, result);
+        saveResult('listVehicles_year_fuel', args, result);
     } catch (error: any) {
-        console.error(`FAILED: listVehicles (additional)`);
+        console.error(`FAILED: listVehicles (year/fuel)`);
         if (error instanceof CarapisClientError) console.error(`  -> API Error (${error.status || 'N/A'}): ${error.message}`, error.details ? `\nDetails: ${JSON.stringify(error.details)}` : '');
         else console.error(`  -> Unexpected Error: ${error.message}`);
     }
 
-    // Enums and Stats
+    // Enums and Stats (unconditional)
     try {
         const args = {}; // No args
         console.log(`\n--- Calling: getVehiclesEnums ---`);
